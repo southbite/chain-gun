@@ -1,0 +1,31 @@
+{
+  "name": "chain-gun",
+  "description": "blockchain built on vertex",
+  "version": "0.0.1",
+  "main": "./lib/server",
+  "scripts": {
+    "test": "LOG_LEVEL=error mocha test/integration/* test/unit/*",
+    "test-release": "rm -rf node_modules && rm -f package-lock.json && npm install && LOG_LEVEL=error mocha test/integration/* test/unit/*"
+  },
+  "author": "Simon Bishop",
+  "license": "MIT",
+  "keywords": [
+    "blockchain",
+    "pub-sub"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/southbite/chain-gun.git"
+  },
+  "dependencies": {
+    "gun": "^0.9.994",
+    "happn-util-crypto": "^0.2.3",
+    "vertex": "^2.1.0"
+  },
+  "devDependencies": {
+    "expect.js": "*",
+    "mocha": "*",
+    "request": "^2.83.0"
+  },
+  "readmeFilename": "README.md"
+}
