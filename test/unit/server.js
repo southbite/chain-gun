@@ -147,4 +147,148 @@ describe('unit/' + filename, function () {
     master.start();
 
   });
+
+  it('initializes a master server and a peer server, tests adding data on the peer server and verifying data on the master server, ensuring bi-directionality', function (done) {
+
+    this.timeout(5000);
+
+    var master = require('../../lib/server').create({port: 9090});
+
+    master.on('server/started', () => {
+
+      var peer = require('../../lib/server').create({port: 9091});
+
+      peer.on('server/started', () => {
+
+        master.on('network/peer/added', (peerUrl) => {
+
+          expect(peerUrl).to.be('http://127.0.0.1:9091/gun');
+
+          var testMasterGetRecord = master.db.get('test-get');
+          var testPeerGetRecord = peer.db.get('test-get');
+
+          testMasterGetRecord.on((data)=> {
+
+            expect(data.id).to.be('test-get');
+
+            testMasterGetRecord.once((item) => {
+
+              expect(item.id).to.be('test-get');
+
+              var testMasterArray = master.db.get('test-array');
+              var testPeerArray = peer.db.get('test-array');
+
+              testPeerArray.set({id: 'test-set-1'});
+              testPeerArray.set({id: 'test-set-2'});
+              testPeerArray.set({id: 'test-set-3'});
+
+              //iterate through array
+              testMasterArray.map((item) => {
+                expect(['test-set-1', 'test-set-2', 'test-set-3'].indexOf(item.id) > -1).to.be(true);
+              });
+
+              master.on('server/stopped', function () {
+
+                peer.on('server/stopped', function () {
+                  done();
+                });
+
+                peer.stop();
+              });
+
+              master.stop();
+            })
+          });
+
+          testPeerGetRecord.put({id: 'test-get'});
+
+        });
+
+        master.addPeer('http://127.0.0.1:9091/gun');
+      });
+
+      peer.start();
+    });
+
+    master.start();
+
+  });
+
+  it('initializes a master server and 2 peer servers, 1 peer is pointed to another peer, tests adding data on the master server and verifying data on the 2nd peer server, ensuring the network is consistent when peers are separated by configuration', function (done) {
+
+    this.timeout(5000);
+
+    var master = require('../../lib/server').create({port: 9090});
+
+    master.on('server/started', () => {
+
+      var peer = require('../../lib/server').create({port: 9091});
+
+      peer.on('server/started', () => {
+
+        var peer1 = require('../../lib/server').create({port: 9092});
+
+        peer1.on('server/started', () => {
+
+          master.on('network/peer/added', (peerUrl) => {
+
+            expect(peerUrl).to.be('http://127.0.0.1:9091/gun');
+
+            var testMasterGetRecord = master.db.get('test-get');
+            var testPeerGetRecord = peer1.db.get('test-get');
+
+            testPeerGetRecord.on((data)=> {
+
+              expect(data.id).to.be('test-get');
+
+              testPeerGetRecord.once((item) => {
+
+                expect(item.id).to.be('test-get');
+
+                var testMasterArray = master.db.get('test-array');
+                var testPeerArray = peer1.db.get('test-array');
+
+                testMasterArray.set({id: 'test-set-1'});
+                testMasterArray.set({id: 'test-set-2'});
+                testMasterArray.set({id: 'test-set-3'});
+
+                //iterate through array
+                testPeerArray.map((item) => {
+                  expect(['test-set-1', 'test-set-2', 'test-set-3'].indexOf(item.id) > -1).to.be(true);
+                });
+
+                master.on('server/stopped', function () {
+
+                  peer.on('server/stopped', function () {
+
+                    peer1.on('server/stopped', function () {
+                      done();
+                    });
+
+                    peer1.stop();
+                  });
+
+                  peer.stop();
+                });
+
+                master.stop();
+              })
+            });
+
+            testMasterGetRecord.put({id: 'test-get'});
+          });
+
+          peer1.addPeer('http://127.0.0.1:9091/gun');
+          master.addPeer('http://127.0.0.1:9091/gun');
+        });
+
+        peer1.start();
+      });
+
+      peer.start();
+    });
+
+    master.start();
+
+  });
 });
