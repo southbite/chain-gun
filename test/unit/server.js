@@ -101,7 +101,7 @@ describe('unit/' + filename, function () {
           var testMasterGetRecord = master.db.get('test-get');
           var testPeerGetRecord = peer.db.get('test-get');
 
-          testPeerGetRecord.once((data)=> {
+          testPeerGetRecord.on((data)=> {
 
             expect(data.id).to.be('test-get');
 
