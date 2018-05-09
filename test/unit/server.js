@@ -63,7 +63,7 @@ describe('unit/' + filename, function () {
           testArray.set({id: 'test-set-3'});
 
           //iterate through array
-          testArray.map((item) => {
+          testArray.map().once((item) => {
             expect(['test-set-1', 'test-set-2', 'test-set-3'].indexOf(item.id) > -1).to.be(true);
           });
 
@@ -117,7 +117,7 @@ describe('unit/' + filename, function () {
               testMasterArray.set({id: 'test-set-3'});
 
               //iterate through array
-              testPeerArray.map((item) => {
+              testPeerArray.map().once((item) => {
                 expect(['test-set-1', 'test-set-2', 'test-set-3'].indexOf(item.id) > -1).to.be(true);
               });
 
@@ -183,7 +183,7 @@ describe('unit/' + filename, function () {
               testPeerArray.set({id: 'test-set-3'});
 
               //iterate through array
-              testMasterArray.map((item) => {
+              testMasterArray.map().once((item) => {
                 expect(['test-set-1', 'test-set-2', 'test-set-3'].indexOf(item.id) > -1).to.be(true);
               });
 
@@ -216,7 +216,7 @@ describe('unit/' + filename, function () {
 
   it('initializes a master server and 2 peer servers, 1 peer is pointed to another peer, tests adding data on the master server and verifying data on the 2nd peer server, ensuring the network is consistent when peers are separated by configuration', function (done) {
 
-    this.timeout(5000);
+    this.timeout(10000);
 
     var master = require('../../lib/server').create({port: 9090});
 
@@ -252,26 +252,38 @@ describe('unit/' + filename, function () {
                 testMasterArray.set({id: 'test-set-2'});
                 testMasterArray.set({id: 'test-set-3'});
 
+                var found = [];
+
                 //iterate through array
-                testPeerArray.map((item) => {
-                  expect(['test-set-1', 'test-set-2', 'test-set-3'].indexOf(item.id) > -1).to.be(true);
+                testPeerArray.map().once((item) => {
+                  found.push(item.id);
                 });
 
-                master.on('server/stopped', function () {
+                setTimeout(() => {
 
-                  peer.on('server/stopped', function () {
+                  expect(found.sort()).to.eql(['test-set-1', 'test-set-2', 'test-set-3']);
 
-                    peer1.on('server/stopped', function () {
-                      done();
+                  expect(Object.keys(peer.peers).sort()).to.eql(['http://127.0.0.1:9090/gun','http://127.0.0.1:9091/gun','http://127.0.0.1:9092/gun']);
+                  expect(Object.keys(master.peers).sort()).to.eql(['http://127.0.0.1:9090/gun','http://127.0.0.1:9091/gun','http://127.0.0.1:9092/gun']);
+                  expect(Object.keys(peer1.peers).sort()).to.eql(['http://127.0.0.1:9090/gun','http://127.0.0.1:9091/gun','http://127.0.0.1:9092/gun']);
+
+                  master.on('server/stopped', function () {
+
+                    peer.on('server/stopped', function () {
+
+                      peer1.on('server/stopped', function () {
+                        done();
+                      });
+
+                      peer1.stop();
                     });
 
-                    peer1.stop();
+                    peer.stop();
                   });
 
-                  peer.stop();
-                });
+                  master.stop();
 
-                master.stop();
+                }, 2000);
               })
             });
 
