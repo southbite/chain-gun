@@ -18,8 +18,10 @@
     "url": "https://github.com/southbite/chain-gun.git"
   },
   "dependencies": {
+    "express": "^4.16.3",
     "gun": "^0.9.994",
     "happn-util-crypto": "^0.2.3",
+    "sillyname": "^0.1.0",
     "vertex": "^2.1.0"
   },
   "devDependencies": {
