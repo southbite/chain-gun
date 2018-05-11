@@ -11,7 +11,7 @@ describe('unit/' + filename, function () {
 
     expect(network.opts.name).to.not.be(null);
     expect(network.opts.name).to.not.be(undefined);
-    expect(network.opts.file.indexOf(path.sep + network.opts.name + '_data.json') > -1).to.be(true);
+    expect(network.opts.file.indexOf(path.sep + network.opts.name) > -1).to.be(true);
     expect(network.opts.ip).to.be('127.0.0.1');
     expect(network.opts.url).to.be(['http://', network.opts.ip, ':', network.opts.port, '/gun'].join(''));
 
@@ -397,5 +397,83 @@ describe('unit/' + filename, function () {
     });
 
     master.start();
+  });
+
+  it('initializes the network with empty opts, starts the network, tests adding and listing data on the networks local db', function (done) {
+
+    var network = require('../../lib/network').create();
+
+    network.on('network/started', (opts) => {
+
+      var testGetRecord = network.db.get('test-get');
+
+      testGetRecord.on((data)=> {
+
+        expect(data.id).to.be('test-get');
+
+        testGetRecord.once((item) => {
+
+          expect(item.id).to.be('test-get');
+
+          var testArray = network.db.get('test-array');
+
+          testArray.set({id: 'test-set-1'});
+          testArray.set({id: 'test-set-2'});
+          testArray.set({id: 'test-set-3'});
+
+          //iterate through array
+          testArray.map().once((item) => {
+            expect(['test-set-1', 'test-set-2', 'test-set-3'].indexOf(item.id) > -1).to.be(true);
+          });
+
+          network.on('network/stopped', function () {
+            done();
+          });
+
+          network.stop();
+        })
+      });
+
+      testGetRecord.put({id: 'test-get'});
+
+    });
+
+    network.start();
+  });
+
+  it('initializes a master network with a fixed name, restarts the master and ensures our persisted data exists', function (done) {
+
+    this.timeout(5000);
+
+    const { fork } = require('child_process');
+
+    var timestamp = Date.now();
+
+    var forkPath = path.resolve('test/__fixtures/network-persistence-test.js');
+
+    console.log('path is: ', forkPath);
+
+    const proc = fork(forkPath, [timestamp]);
+
+    proc.on('close', (code, signal) => {
+
+      var master = require('../../lib/network').create({port: 9090, name: 'test-persistence-between-restarts-' + timestamp});
+
+      master.on('network/started', () => {
+
+        master.db.get('test-get-' + timestamp).once(function(data){
+
+          expect(data.test).to.be('data');
+
+          master.stop();
+
+          setTimeout(done, 1000);
+        });
+
+      });
+
+      master.start();
+
+    });
   });
 });
