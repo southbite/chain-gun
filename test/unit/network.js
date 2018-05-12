@@ -441,7 +441,7 @@ describe('unit/' + filename, function () {
     network.start();
   });
 
-  it('initializes a master network with a fixed name, restarts the master and ensures our persisted data exists', function (done) {
+  it('initializes a network instance on a separate process with a fixed name and pushes a piece of data into it, process exits, we start a peer with the same name and db file, we ensures our persisted data exists', function (done) {
 
     this.timeout(5000);
 
@@ -450,8 +450,6 @@ describe('unit/' + filename, function () {
     var timestamp = Date.now();
 
     var forkPath = path.resolve('test/__fixtures/network-persistence-test.js');
-
-    console.log('path is: ', forkPath);
 
     const proc = fork(forkPath, [timestamp]);
 

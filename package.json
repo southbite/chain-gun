@@ -18,6 +18,7 @@
     "url": "https://github.com/southbite/chain-gun.git"
   },
   "dependencies": {
+    "async": "^2.6.0",
     "encoding-down": "^4.0.0",
     "express": "^4.16.3",
     "gun": "^0.9.994",
