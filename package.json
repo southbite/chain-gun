@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "async": "^2.6.0",
+    "body-parser": "^1.18.2",
     "encoding-down": "^4.0.0",
     "express": "^4.16.3",
     "gun": "^0.9.994",
@@ -33,7 +34,7 @@
   "devDependencies": {
     "expect.js": "*",
     "mocha": "*",
-    "request": "^2.83.0"
+    "restler": "^3.4.0"
   },
   "readmeFilename": "README.md"
 }

@@ -474,4 +474,42 @@ describe('unit/' + filename, function () {
 
     });
   });
+
+  it('tests the api functionality', function (done) {
+
+    this.timeout(5000);
+
+    var network = require('../../lib/network').create();
+
+    network.addApiRequestHandler('block/at/index', function(req, res){
+
+      res.status(200).send(req.body);
+    });
+
+    network.on('network/started', (opts) => {
+
+      var request = require('restler');
+
+      var operation = {
+        action:'block/at/index',
+        parameters: {
+          'opts': {'number': 1}
+        }
+      };
+
+      request.postJson('http://localhost:8080/api', operation).on('complete', function (result) {
+
+        expect(result.parameters.opts.number).to.be(1);
+
+        network.on('network/stopped', (opts) => {
+
+          done();
+        });
+
+        network.stop();
+      });
+    });
+
+    network.start();
+  });
 });
