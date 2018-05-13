@@ -486,22 +486,22 @@ describe('unit/' + filename, function () {
       res.status(200).send(req.body);
     });
 
-    network.on('network/started', (opts) => {
+    network.on('network/started', () => {
 
       var request = require('restler');
 
       var operation = {
         action:'block/at/index',
         parameters: {
-          'opts': {'number': 1}
+          index:1
         }
       };
 
       request.postJson('http://localhost:8080/api', operation).on('complete', function (result) {
 
-        expect(result.parameters.opts.number).to.be(1);
+        expect(result.parameters.index).to.be(1);
 
-        network.on('network/stopped', (opts) => {
+        network.on('network/stopped', () => {
 
           done();
         });
