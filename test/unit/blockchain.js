@@ -69,6 +69,33 @@ describe('unit/' + filename, function () {
     blockchain.newTx(tx);
   });
 
+  it('tests pruning existing tx\'s', function (done) {
+
+    const blockchain = require('../../lib/blockchain').create({genesis: true, emptyTransactionsWait: 1000});
+
+    blockchain.current_transactions = [
+      {signature: 0},
+      {signature: 1},
+      {signature: 2},
+      {signature: 3},
+      {signature: 4}
+    ];
+
+    blockchain.pruneMinedTransactions({
+      transactions: [
+        {signature: 1},
+        {signature: 3}
+      ]
+    });
+
+    expect(blockchain.current_transactions).to.eql([
+      {signature: 0},
+      {signature: 2},
+      {signature: 4}]);
+
+    done();
+  });
+
   it('mines a new block', function (done) {
 
     const blockchain = require('../../lib/blockchain').create({genesis: true, emptyTransactionsWait: 1000});
@@ -240,7 +267,7 @@ describe('unit/' + filename, function () {
 
     var blockCount = 0;
 
-    blockchain2.on('block-accepted',  (acceptedBlock) => {
+    blockchain2.on('block-accepted', (acceptedBlock) => {
 
       blockCount++;
 
@@ -254,15 +281,15 @@ describe('unit/' + filename, function () {
         clearInterval(txInterval1);
         clearInterval(txInterval2);
 
-        setTimeout(()=>{
+        setTimeout(()=> {
 
           expect(Object.keys(blockchain1Chain).sort()).to.eql(Object.keys(blockchain2Chain).sort());
 
-          var chain1Array = Object.keys(blockchain1Chain).map(function(key){
+          var chain1Array = Object.keys(blockchain1Chain).map(function (key) {
             return blockchain1Chain[key];
           });
 
-          var chain2Array = Object.keys(blockchain2Chain).map(function(key){
+          var chain2Array = Object.keys(blockchain2Chain).map(function (key) {
             return blockchain2Chain[key];
           });
 
@@ -281,7 +308,7 @@ describe('unit/' + filename, function () {
 
     blockchain2.mineStart();
 
-    var txInterval1 = setInterval(function(){
+    var txInterval1 = setInterval(function () {
 
       var senderKeyPair = utils.keyPair();
       var recipientKeyPair = utils.keyPair();
@@ -300,7 +327,7 @@ describe('unit/' + filename, function () {
 
     }, 500);
 
-    var txInterval2 = setInterval(function(){
+    var txInterval2 = setInterval(function () {
 
       var senderKeyPair = utils.keyPair();
       var recipientKeyPair = utils.keyPair();
