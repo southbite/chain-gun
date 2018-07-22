@@ -39,7 +39,10 @@ describe('unit/' + filename, function () {
             timeCb2();
           });
 
-        }, done);
+        }, function(e){
+          if (e) return done(e);
+          db.stop().then(done).catch(done);
+        });
       });
     });
 
